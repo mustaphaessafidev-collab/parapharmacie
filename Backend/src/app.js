@@ -1,14 +1,18 @@
 const express = require("express");
-const cors = require("cors");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
-app.use(cors());
+// Middleware
 app.use(express.json());
 
+// Routes
+app.use("/api/auth", authRoutes);
+
+// Test
 app.get("/", (req, res) => {
   res.json({
-    message: "API Parapharmacie fonctionne !"
+    message: "Parapharmacie API fonctionne",
   });
 });
 
