@@ -1,21 +1,55 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { login, saveSession } from "../../services/authService";
 
 function LoginForm() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [needsVerification, setNeedsVerification] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setNeedsVerification(false);
 
-    const loginData = {
-      email,
-      password,
-      rememberMe,
-    };
+    const normalizedEmail = email.trim().toLowerCase();
 
-    console.log("Login data:", loginData);
+    if (!normalizedEmail || !password) {
+      setError("L'adresse e-mail et le mot de passe sont obligatoires.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await login({
+        email: normalizedEmail,
+        password,
+      });
+
+      if (!response?.token || !response?.user) {
+        setError("Réponse de connexion incomplète.");
+        return;
+      }
+
+      saveSession(response, rememberMe);
+      navigate("/");
+    } catch (err) {
+      const message = err.message || "Erreur lors de la connexion";
+      setError(message);
+
+      if (message.toLowerCase().includes("vérifier")) {
+        sessionStorage.setItem("pendingVerificationEmail", normalizedEmail);
+        setNeedsVerification(true);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,31 +85,38 @@ function LoginForm() {
 
         </div>
 
-        {/* Error */}
-        <div className="mb-6 flex gap-3 rounded-xl bg-red-100 p-4 text-red-600">
-
-          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-red-500 text-xs font-bold">
-            !
-          </div>
-
-          <div className="flex-1">
-            <p className="font-medium">
-              Identifiants invalides
-            </p>
-
-            <p className="mt-1 text-sm leading-5">
-              L'adresse e-mail ou le mot de passe renseigné est incorrect.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="text-xl leading-none text-red-500 hover:text-red-700"
+        {error && (
+          <div
+            role="alert"
+            className="mb-6 flex gap-3 rounded-xl bg-red-100 p-4 text-red-600"
           >
-            ×
-          </button>
+            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-red-500 text-xs font-bold">
+              !
+            </div>
 
-        </div>
+            <div className="flex-1">
+              <p className="font-medium">Connexion impossible</p>
+              <p className="mt-1 text-sm leading-5">{error}</p>
+              {needsVerification && (
+                <Link
+                  to="/verify-email"
+                  className="mt-2 inline-block text-sm font-semibold text-emerald-800"
+                >
+                  Saisir le code de vérification
+                </Link>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setError("")}
+              className="text-xl leading-none text-red-500 hover:text-red-700"
+              aria-label="Fermer le message"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
@@ -188,10 +229,10 @@ function LoginForm() {
           {/* Login button */}
           <button
             type="submit"
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 text-base font-semibold text-white transition hover:bg-emerald-800"
+            disabled={loading}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 text-base font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            🔒
-            Se connecter
+            {loading ? "Connexion..." : "Se connecter"}
           </button>
 
         </form>
@@ -226,12 +267,12 @@ function LoginForm() {
 
           Vous n'avez pas encore de compte ?
 
-          <a
-            href="/register"
+          <Link
+            to="/register"
             className="ml-1 font-semibold text-emerald-700 hover:text-emerald-800"
           >
             Créer un compte
-          </a>
+          </Link>
 
         </p>
 
