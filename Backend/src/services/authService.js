@@ -1,6 +1,7 @@
 
 const bcrypt = require("bcryptjs");
 const prisma = require("../config/prisma");
+const jwt = require("jsonwebtoken");
 
 const register = async ({
   fullName,
@@ -67,4 +68,55 @@ const register = async ({
   });
 };
 
-module.exports = { register };
+const login = async ({ email, password }) => {
+  if (!email || !password) {
+    throw new Error("Email et mot de passe obligatoires");
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user) {
+    throw new Error("Email ou mot de passe incorrect");
+  }
+
+  if (!user.isActive) {
+    throw new Error("Votre compte est désactivé");
+  }
+
+  const isPasswordValid = await bcrypt.compare(
+    password,
+    user.passwordHash
+  );
+
+  if (!isPasswordValid) {
+    throw new Error("Email ou mot de passe incorrect");
+  }
+
+  const token = jwt.sign(
+    {
+      userId: user.id,
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      emailVerified: user.emailVerified,
+    },
+  };
+};
+
+module.exports = { register,login };

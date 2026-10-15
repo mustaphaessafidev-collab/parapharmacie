@@ -33,4 +33,33 @@ const register = async (req, res) => {
   }
 };
 
-module.exports = { register };
+
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+
+    const result = await authService.login({
+      email,
+      password,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Connexion réussie",
+      ...result,
+    });
+  } catch (error) {
+    console.error("LOGIN ERROR:", error.message);
+
+    const statusCode =
+      error.message === "Votre compte est désactivé" ? 403 : 400;
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Erreur lors de la connexion",
+    });
+  }
+};
+
+
+module.exports = { register,login };
