@@ -1,3 +1,4 @@
+
 const bcrypt = require("bcryptjs");
 const prisma = require("../config/prisma");
 
@@ -16,8 +17,11 @@ const register = async ({
     throw new Error("Les mots de passe ne correspondent pas");
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedPhone = phone.trim();
+
   const existingEmail = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
+    where: { email: normalizedEmail },
   });
 
   if (existingEmail) {
@@ -25,33 +29,42 @@ const register = async ({
   }
 
   const existingPhone = await prisma.user.findUnique({
-    where: { phone },
+    where: { phone: normalizedPhone },
   });
 
   if (existingPhone) {
     throw new Error("Ce numéro de téléphone est déjà utilisé");
   }
 
+  const parts = fullName.trim().split(/\s+/);
+  const firstName = parts.shift();
+  const lastName = parts.join(" ");
+
+  if (!lastName) {
+    throw new Error("Veuillez saisir le prénom et le nom");
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   return prisma.user.create({
     data: {
-      fullName,
-      email: email.toLowerCase(),
-      phone,
-      password: hashedPassword,
+      firstName,
+      lastName,
+      email: normalizedEmail,
+      phone: normalizedPhone,
+      passwordHash: hashedPassword,
+      role: "CLIENT",
     },
     select: {
       id: true,
-      fullName: true,
+      firstName: true,
+      lastName: true,
       email: true,
       phone: true,
-      isEmailVerified: true,
+      emailVerified: true,
       createdAt: true,
     },
   });
 };
 
-module.exports = {
-  register,
-};
+module.exports = { register };

@@ -2,23 +2,35 @@ const authService = require("../services/authService");
 
 const register = async (req, res) => {
   try {
-    const user = await authService.register(req.body);
+    const {
+      fullName,
+      email,
+      phone,
+      password,
+      confirmPassword,
+    } = req.body || {};
+
+    const user = await authService.register({
+      fullName,
+      email,
+      phone,
+      password,
+      confirmPassword,
+    });
 
     return res.status(201).json({
       success: true,
-      message: "Compte créé avec succès",
+      message: "Inscription réussie",
       user,
     });
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
+    console.error("REGISTER ERROR:", error.message);
 
-    return res.status(500).json({
+    return res.status(400).json({
       success: false,
-      message: "Erreur serveur",
+      message: error.message || "Erreur lors de l'inscription",
     });
   }
 };
 
-module.exports = {
-  register,
-};
+module.exports = { register };

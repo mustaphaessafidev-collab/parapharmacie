@@ -13,7 +13,7 @@ model User {
   lastName      String   @map("last_name") @db.VarChar(100)
   email         String   @unique @db.VarChar(255)
   passwordHash  String   @map("password_hash") @db.VarChar(255)
-  phone         String?  @db.VarChar(20)
+  phone         String?  @unique @db.VarChar(20)
   address       String?  @db.VarChar(255)
   role          String   @db.VarChar(20)
   isActive      Boolean  @default(true) @map("is_active")
