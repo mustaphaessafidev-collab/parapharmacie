@@ -62,4 +62,29 @@ const login = async (req, res) => {
 };
 
 
-module.exports = { register,login };
+
+const verifyEmail = async (req, res) => {
+  try {
+    const { email, code } = req.body || {};
+
+    const result = await authService.verifyEmail({
+      email,
+      code,
+    });
+
+    return res.status(200).json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    console.error("VERIFY EMAIL ERROR:", error.message);
+
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Erreur lors de la vérification",
+    });
+  }
+};
+
+
+module.exports = { register,login,verifyEmail };

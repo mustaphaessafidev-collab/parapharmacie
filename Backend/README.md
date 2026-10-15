@@ -77,3 +77,38 @@
 - `403` : compte désactivé.
 - `500` : erreur interne du serveur.
 
+ ### API : Vérification de l'email
+
+### Méthode : POST
+
+### URL : http://localhost:5000/api/auth/verify-email
+
+### Description : Vérifier le code reçu par email et activer le compte utilisateur.
+
+### Body (JSON) :
+```json
+
+{
+  "email": "adresse@email.com",
+  "code": "123456"
+}
+
+```
+### Réponse : 200 OK
+```json
+{
+  "success": true,
+  "message": "Adresse email vérifiée avec succès"
+}
+
+Erreurs possibles :
+
+### 400 : email ou code manquant.
+
+### 400 : utilisateur introuvable.
+
+### 400 : code invalide, expiré ou déjà utilisé.
+
+### 500 : erreur interne du serveur.
+
+### Remarque : Le code contient 6 chiffres et expire après 10 minutes. Après vérification, emailVerified passe à true.
