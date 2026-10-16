@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login, saveSession } from "../../services/authService";
-
+import { GoogleLogin } from "@react-oauth/google";
 function LoginForm() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -51,6 +51,50 @@ function LoginForm() {
       setLoading(false);
     }
   };
+
+  
+const handleGoogleSuccess = async (googleResponse) => {
+  setError("");
+  setNeedsVerification(false);
+  setLoading(true);
+
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/auth/google`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          credential: googleResponse.credential,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Erreur lors de la connexion Google"
+      );
+    }
+
+    if (!data.token || !data.user) {
+      throw new Error("Réponse de connexion incomplète.");
+    }
+
+    saveSession(data, rememberMe);
+    navigate("/");
+  } catch (err) {
+    setError(
+      err.message || "Erreur lors de la connexion avec Google"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-8">
@@ -251,7 +295,7 @@ function LoginForm() {
         </div>
 
         {/* Google */}
-        <button
+        {/* <button
           type="button"
           className="flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-indigo-50 text-sm font-medium text-slate-700 transition hover:bg-indigo-100"
         >
@@ -260,8 +304,21 @@ function LoginForm() {
           </span>
 
           Continuer avec Google
-        </button>
+        </button> */}
 
+        <div className="flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-indigo-50 text-sm font-medium text-slate-700 transition hover:bg-indigo-100">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              setError("La connexion avec Google a échoué.");
+            }}
+            text="continue_with"
+            shape="rectangular"
+            theme="filled_blue"
+            size="large"
+            width="400"
+          />
+        </div>
         {/* Register */}
         <p className="mt-10 text-center text-sm text-gray-500">
 

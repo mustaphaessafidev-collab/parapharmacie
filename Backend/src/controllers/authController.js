@@ -87,4 +87,29 @@ const verifyEmail = async (req, res) => {
 };
 
 
-module.exports = { register,login,verifyEmail };
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body || {};
+
+    const result = await authService.googleLogin({ credential });
+
+    return res.status(200).json({
+      success: true,
+      message: "Connexion Google réussie",
+      ...result,
+    });
+  } catch (error) {
+    console.error("GOOGLE LOGIN ERROR:", error.message);
+
+    const statusCode =
+      error.message === "Votre compte est désactivé" ? 403 : 400;
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Erreur lors de la connexion Google",
+    });
+  }
+};
+
+
+module.exports = { register,login,verifyEmail ,googleLogin};

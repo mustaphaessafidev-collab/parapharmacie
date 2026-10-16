@@ -4,6 +4,9 @@ const prisma = require("../config/prisma");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { sendVerificationEmail } = require("./emailService");
+const { OAuth2Client } = require("google-auth-library");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const register = async ({
   fullName,
@@ -201,6 +204,8 @@ const login = async ({ email, password }) => {
     throw new Error("Email ou mot de passe incorrect");
   }
 
+
+
   const token = jwt.sign(
     {
       userId: user.id,
@@ -224,4 +229,99 @@ const login = async ({ email, password }) => {
   };
 };
 
-module.exports = { register,login ,verifyEmail };
+
+
+
+const googleLogin = async ({ credential }) => {
+  if (!credential) {
+    throw new Error("Credential Google obligatoire");
+  }
+
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    throw new Error("Configuration Google manquante");
+  }
+
+  // 1. Vérifier le token Google
+  const ticket = await googleClient.verifyIdToken({
+    idToken: credential,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+
+  if (!payload || !payload.sub || !payload.email || payload.email_verified !== true) {
+    throw new Error("Compte Google invalide ou email non vérifié");
+  }
+
+  const googleId = payload.sub;
+  const email = payload.email.trim().toLowerCase();
+
+  const firstName = payload.given_name || payload.name?.split(" ")[0] || "Client";
+  const lastName = payload.family_name || payload.name?.split(" ").slice(1).join(" ") || "";
+
+  // 2. Chercher le compte Google existant
+  let user = await prisma.user.findUnique({
+    where: { googleId },
+  });
+
+  // 3. Si Google ID n'existe pas, chercher par email
+  if (!user) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      if (existingUser.googleId !== googleId) {
+        throw new Error(
+          "Un compte existe déjà avec cet email. Connectez-vous avec votre méthode habituelle."
+        );
+      }
+
+      user = existingUser;
+    } else {
+      // 4. Créer le nouveau compte
+      user = await prisma.user.create({
+        data: {
+          firstName,
+          lastName,
+          email,
+          googleId,
+          passwordHash: null,
+          phone: null,
+          role: "CLIENT",
+          emailVerified: true,
+          isActive: true,
+        },
+      });
+    }
+  }
+
+  if (!user.isActive) {
+    throw new Error("Votre compte est désactivé");
+  }
+
+  // 5. Générer le JWT de notre application
+  const token = jwt.sign(
+    {
+      userId: user.id,
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      emailVerified: user.emailVerified,
+    },
+  };
+};
+
+module.exports = { register,login ,verifyEmail,googleLogin };

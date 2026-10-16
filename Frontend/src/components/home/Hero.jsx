@@ -57,7 +57,7 @@ function Hero() {
                   <span className="block text-xs text-slate-500">{detail}</span>
                 </span>
                 <span className="text-xs font-medium text-emerald-800">
-                  En rayon
+                  AtlasPara
                 </span>
               </li>
             ))}

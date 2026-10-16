@@ -34,8 +34,7 @@ function Categories() {
             Catégories de produits
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Un rayon clair pour trouver le soin adapté, sans catalogue
-            inventé : les fiches produits arriveront avec l'API catalogue.
+            Les grandes familles de soins proposées par la parapharmacie.
           </p>
         </div>
         <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
