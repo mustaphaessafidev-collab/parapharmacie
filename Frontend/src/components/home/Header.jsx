@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { clearSession, getSession } from "../../services/authService";
+import {
+  clearSession,
+  getSession,
+  pathForRole,
+  roleLabel,
+} from "../../services/authService";
 
 function Header() {
   const navigate = useNavigate();
@@ -45,9 +50,12 @@ function Header() {
         <div className="hidden items-center gap-2 md:flex">
           {session?.user ? (
             <>
-              <span className="text-sm text-slate-600">
-                Bonjour, {session.user.firstName}
-              </span>
+              <Link
+                to={pathForRole(session.user.role)}
+                className="text-sm font-semibold text-emerald-800"
+              >
+                {roleLabel(session.user.role)}
+              </Link>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -95,13 +103,22 @@ function Header() {
               Avantages
             </a>
             {session?.user ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="py-1 text-left font-medium text-emerald-800"
-              >
-                Se déconnecter
-              </button>
+              <>
+                <Link
+                  to={pathForRole(session.user.role)}
+                  onClick={closeMenu}
+                  className="py-1 font-semibold text-emerald-800"
+                >
+                  {roleLabel(session.user.role)}
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="py-1 text-left font-medium text-emerald-800"
+                >
+                  Se déconnecter
+                </button>
+              </>
             ) : (
               <>
                 <Link

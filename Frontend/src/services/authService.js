@@ -81,9 +81,35 @@ export const getSession = () => {
   }
 };
 
+export const updateSessionUser = (user) => {
+  const current = getSession();
+  if (!current) return null;
+
+  const storage = localStorage.getItem(TOKEN_KEY) ? localStorage : sessionStorage;
+  const next = { ...current.user, ...user };
+  storage.setItem(USER_KEY, JSON.stringify(next));
+  return next;
+};
+
 export const clearSession = () => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   sessionStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem(USER_KEY);
 };
+
+const ROLE_PATHS = {
+  ADMIN: "/admin",
+  CLIENT: "/client",
+  LIVREUR: "/livreur",
+};
+
+const ROLE_LABELS = {
+  ADMIN: "Admin",
+  CLIENT: "Client",
+  LIVREUR: "Livreur",
+};
+
+export const pathForRole = (role) => ROLE_PATHS[role] || "/";
+
+export const roleLabel = (role) => ROLE_LABELS[role] || "";

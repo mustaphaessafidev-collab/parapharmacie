@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login, saveSession } from "../../services/authService";
+import { login, pathForRole, saveSession } from "../../services/authService";
 import { GoogleLogin } from "@react-oauth/google";
 function LoginForm() {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ function LoginForm() {
       }
 
       saveSession(response, rememberMe);
-      navigate("/");
+      navigate(pathForRole(response.user.role));
     } catch (err) {
       const message = err.message || "Erreur lors de la connexion";
       setError(message);
@@ -85,7 +85,7 @@ const handleGoogleSuccess = async (googleResponse) => {
     }
 
     saveSession(data, rememberMe);
-    navigate("/");
+    navigate(pathForRole(data.user.role));
   } catch (err) {
     setError(
       err.message || "Erreur lors de la connexion avec Google"
