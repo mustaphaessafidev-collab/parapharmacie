@@ -1,7 +1,13 @@
 
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const productRoutes = require("./routes/productRoutes");
+const clientRoutes = require("./routes/clientRoutes");
+const livreurRoutes = require("./routes/livreurRoutes");
 
 const app = express();
 
@@ -14,8 +20,21 @@ app.use(
 );
 
 app.use(express.json());
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../uploads"), {
+    index: false,
+    dotfiles: "deny",
+    fallthrough: false,
+  })
+);
 
 app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/client", clientRoutes);
+app.use("/api/livreur", livreurRoutes);
 
 app.get("/", (req, res) => {
   res.json({

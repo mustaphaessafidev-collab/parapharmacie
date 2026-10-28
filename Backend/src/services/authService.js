@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { sendVerificationEmail } = require("./emailService");
 const { OAuth2Client } = require("google-auth-library");
+const { isStoredAvatar } = require("./avatarStorage");
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -223,6 +224,7 @@ const login = async ({ email, password }) => {
       lastName: user.lastName,
       email: user.email,
       phone: user.phone,
+      avatarUrl: isStoredAvatar(user.avatarUrl) ? user.avatarUrl : null,
       role: user.role,
       emailVerified: user.emailVerified,
     },
@@ -318,6 +320,7 @@ const googleLogin = async ({ credential }) => {
       lastName: user.lastName,
       email: user.email,
       phone: user.phone,
+      avatarUrl: isStoredAvatar(user.avatarUrl) ? user.avatarUrl : null,
       role: user.role,
       emailVerified: user.emailVerified,
     },

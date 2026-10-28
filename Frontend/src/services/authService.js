@@ -81,9 +81,77 @@ export const getSession = () => {
   }
 };
 
+export const updateSessionUser = (user) => {
+  const current = getSession();
+  if (!current) return null;
+
+  const storage = localStorage.getItem(TOKEN_KEY) ? localStorage : sessionStorage;
+  const next = { ...current.user, ...user };
+  storage.setItem(USER_KEY, JSON.stringify(next));
+  return next;
+};
+
 export const clearSession = () => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   sessionStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem(USER_KEY);
 };
+
+const ROLE_PATHS = {
+  ADMIN: "/admin",
+  CLIENT: "/client",
+  LIVREUR: "/livreur",
+};
+
+const ROLE_LABELS = {
+  ADMIN: "Admin",
+  CLIENT: "Client",
+  LIVREUR: "Livreur",
+};
+
+export const pathForRole = (role) => ROLE_PATHS[role] || "/";
+
+export const roleLabel = (role) => ROLE_LABELS[role] || "";
+
+const RETURN_KEY = "atlaspara_return";
+
+export const safeReturnPath = (value) => {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.includes("\\") || trimmed.includes("://")) {
+    return "";
+  }
+
+  const [pathname, query = ""] = trimmed.split("?");
+  if (pathname.includes("..")) return "";
+
+  const allowed =
+    pathname === "/produits" ||
+    /^\/produits\/[0-9a-fA-F-]{36}$/.test(pathname) ||
+    pathname === "/client/produits" ||
+    /^\/client\/produits\/[0-9a-fA-F-]{36}$/.test(pathname) ||
+    pathname === "/client/panier" ||
+    pathname === "/client/commander";
+
+  if (!allowed) return "";
+
+  const safeQuery = query
+    .split("&")
+    .filter((part) => /^(search|categoryId|sort|order|page)=[A-Za-z0-9._~%-]{0,120}$/.test(part))
+    .slice(0, 6)
+    .join("&");
+
+  return safeQuery ? `${pathname}?${safeQuery}` : pathname;
+};
+
+export const rememberReturn = (value) => {
+  const next = safeReturnPath(value);
+  if (next) sessionStorage.setItem(RETURN_KEY, next);
+  else sessionStorage.removeItem(RETURN_KEY);
+  return next;
+};
+
+export const storedReturnPath = () => safeReturnPath(sessionStorage.getItem(RETURN_KEY) || "");
+
+export const clearReturn = () => sessionStorage.removeItem(RETURN_KEY);

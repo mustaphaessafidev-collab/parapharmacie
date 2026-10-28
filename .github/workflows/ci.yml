@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main, mustapha]
+  pull_request:
+    branches: [main, mustapha]
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_GOOGLE_CLIENT_ID: ci-only.apps.googleusercontent.com
+          VITE_API_URL: http://127.0.0.1:5000/api
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Backend
+    env:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci_unused
+      JWT_SECRET: ci-only-not-a-real-secret
+      GOOGLE_CLIENT_ID: ci-only.apps.googleusercontent.com
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npx --no-install prisma validate
+
+      - name: Generate Prisma client
+        run: npx --no-install prisma generate

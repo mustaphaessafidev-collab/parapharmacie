@@ -1,9 +1,20 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { login, saveSession } from "../../services/authService";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  clearReturn,
+  login,
+  pathForRole,
+  rememberReturn,
+  safeReturnPath,
+  saveSession,
+  storedReturnPath,
+} from "../../services/authService";
 import { GoogleLogin } from "@react-oauth/google";
 function LoginForm() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const requestedReturn = safeReturnPath(params.get("next")) || storedReturnPath();
+  const purchasePrompt = params.get("reason") === "order" || Boolean(requestedReturn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -38,7 +49,9 @@ function LoginForm() {
       }
 
       saveSession(response, rememberMe);
-      navigate("/");
+      const next = response.user.role === "CLIENT" ? requestedReturn : "";
+      clearReturn();
+      navigate(next || pathForRole(response.user.role));
     } catch (err) {
       const message = err.message || "Erreur lors de la connexion";
       setError(message);
@@ -85,7 +98,9 @@ const handleGoogleSuccess = async (googleResponse) => {
     }
 
     saveSession(data, rememberMe);
-    navigate("/");
+    const next = data.user.role === "CLIENT" ? requestedReturn : "";
+    clearReturn();
+    navigate(next || pathForRole(data.user.role));
   } catch (err) {
     setError(
       err.message || "Erreur lors de la connexion avec Google"
@@ -97,24 +112,15 @@ const handleGoogleSuccess = async (googleResponse) => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4 py-10">
 
       {/* Card */}
-      <div className="w-full max-w-[500px] rounded-2xl bg-white px-10 py-9 shadow-xl">
+      <div className="w-full max-w-[440px] border border-neutral-200 bg-white px-8 py-8">
 
-        {/* Security top */}
-        <div className="mb-14 flex items-center justify-between text-sm">
-
-          <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-gray-600">
-            🛡️ Espace Sécurisé
-          </span>
-
-          <span className="text-gray-600">
-            <span className="mr-1 text-emerald-600">●</span>
-            SSL 256-Bit
-          </span>
-
-        </div>
+        <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-neutral-950">
+          <span className="flex h-8 w-8 items-center justify-center bg-[#0e7a45] text-white">+</span>
+          AtlasPara
+        </Link>
 
         {/* Header */}
         <div className="mb-7 text-center">
@@ -128,6 +134,22 @@ const handleGoogleSuccess = async (googleResponse) => {
           </p>
 
         </div>
+
+        {purchasePrompt && (
+          <div className="mb-6 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">
+            <p className="font-medium">Connexion requise pour commander</p>
+            <p className="mt-1 leading-5">
+              Vous pouvez consulter les produits sans compte. Connectez-vous pour ajouter un article au panier et passer commande.
+            </p>
+            <Link
+              to={requestedReturn ? `/register?reason=order&next=${encodeURIComponent(requestedReturn)}` : "/register"}
+              onClick={() => rememberReturn(requestedReturn)}
+              className="mt-2 inline-block font-semibold text-emerald-800"
+            >
+              Créer un compte
+            </Link>
+          </div>
+        )}
 
         {error && (
           <div
@@ -183,11 +205,7 @@ const handleGoogleSuccess = async (googleResponse) => {
 
             </div>
 
-            <div className="flex h-12 items-center rounded-lg bg-indigo-50 px-4">
-
-              <span className="mr-3 text-lg text-gray-500">
-                ✉
-              </span>
+            <div className="flex h-12 items-center border border-neutral-300 px-3 focus-within:border-neutral-950">
 
               <input
                 id="email"
@@ -197,12 +215,6 @@ const handleGoogleSuccess = async (googleResponse) => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-gray-400"
               />
-
-              {email && (
-                <span className="text-xl font-bold text-emerald-600">
-                  ✓
-                </span>
-              )}
 
             </div>
 
@@ -218,11 +230,7 @@ const handleGoogleSuccess = async (googleResponse) => {
               Mot de passe
             </label>
 
-            <div className="flex h-12 items-center rounded-lg bg-indigo-50 px-4">
-
-              <span className="mr-3 text-lg text-gray-500">
-                🔒
-              </span>
+            <div className="flex h-12 items-center border border-neutral-300 px-3 focus-within:border-neutral-950">
 
               <input
                 id="password"
@@ -236,9 +244,10 @@ const handleGoogleSuccess = async (googleResponse) => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-lg text-gray-500 hover:text-gray-700"
+                className="text-xs font-medium text-neutral-600 hover:text-neutral-950"
+                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
               >
-                {showPassword ? "🙈" : "👁"}
+                {showPassword ? "Masquer" : "Afficher"}
               </button>
 
             </div>
@@ -274,7 +283,7 @@ const handleGoogleSuccess = async (googleResponse) => {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 text-base font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-12 w-full items-center justify-center gap-2 bg-[#0e7a45] text-base font-semibold text-white transition hover:bg-[#0c693b] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Connexion..." : "Se connecter"}
           </button>
@@ -306,7 +315,7 @@ const handleGoogleSuccess = async (googleResponse) => {
           Continuer avec Google
         </button> */}
 
-        <div className="flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-indigo-50 text-sm font-medium text-slate-700 transition hover:bg-indigo-100">
+        <div className="flex h-12 w-full items-center justify-center">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => {
@@ -325,24 +334,14 @@ const handleGoogleSuccess = async (googleResponse) => {
           Vous n'avez pas encore de compte ?
 
           <Link
-            to="/register"
+            to={requestedReturn ? `/register?reason=order&next=${encodeURIComponent(requestedReturn)}` : "/register"}
+            onClick={() => rememberReturn(requestedReturn)}
             className="ml-1 font-semibold text-emerald-700 hover:text-emerald-800"
           >
             Créer un compte
           </Link>
 
         </p>
-
-        {/* CNDP */}
-        <div className="mt-5 flex items-center justify-center gap-2 rounded-lg bg-indigo-50 px-3 py-2 text-center text-xs text-gray-600">
-
-          🛡️
-
-          <span>
-            Données de santé protégées et cryptées selon la norme CNDP Maroc
-          </span>
-
-        </div>
 
       </div>
 

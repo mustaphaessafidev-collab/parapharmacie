@@ -15,6 +15,7 @@ model User {
   passwordHash String? @map("password_hash") @db.VarChar(255)
   phone         String?  @unique @db.VarChar(20)
   address       String?  @db.VarChar(255)
+  avatarUrl     String?  @map("avatar_url") @db.VarChar(255)
   role          String   @db.VarChar(20)
   isActive      Boolean  @default(true) @map("is_active")
   emailVerified Boolean  @default(false) @map("email_verified")
@@ -124,6 +125,7 @@ model Product {
   imageUrl      String?  @map("image_url") @db.VarChar(500)
   stockQuantity Int      @map("stock_quantity")
   isActive      Boolean  @default(true) @map("is_active")
+  isFeatured    Boolean  @default(false) @map("is_featured")
   createdAt     DateTime @default(now()) @map("created_at")
 
   categoryId String @map("id_category") @db.Uuid

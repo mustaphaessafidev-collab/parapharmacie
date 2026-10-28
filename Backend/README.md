@@ -112,3 +112,21 @@ Erreurs possibles :
 ### 500 : erreur interne du serveur.
 
 ### Remarque : Le code contient 6 chiffres et expire après 10 minutes. Après vérification, emailVerified passe à true.
+
+## Développement uniquement
+
+Le seed ne se lance pas avec le serveur. Il faut l'exécuter à la main depuis `Backend`, et il s'arrête immédiatement si `NODE_ENV=production`, avant toute lecture des mots de passe.
+
+```bash
+npx prisma db seed
+```
+
+Les mots de passe ne sont pas dans le dépôt. Ils sont lus depuis `Backend/.env`, qui est ignoré par Git :
+
+```text
+SEED_ADMIN_PASSWORD=replace-with-a-local-password
+SEED_CLIENT_PASSWORD=replace-with-a-local-password
+SEED_LIVREUR_PASSWORD=replace-with-a-local-password
+```
+
+Le script peut être relancé. Il ne duplique pas les catégories, les produits ni les commandes de démonstration, et il ne modifie pas un compte admin ou livreur déjà présent. Les comptes reconnus sont `admin@admin.com`, `client.demo@atlaspara.test` et `livreur@atlaspara.com`. Le client de démonstration est déjà vérifié. Les produits portent la marque « Catalogue démo AtlasPara » et une référence `AP-DEMO`. Les commandes de démonstration ont une adresse qui commence par `DEMO`.
