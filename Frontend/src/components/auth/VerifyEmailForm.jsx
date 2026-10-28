@@ -1,7 +1,7 @@
 
 import { useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { verifyEmail } from "../../services/authService";
+import { storedReturnPath, verifyEmail } from "../../services/authService";
 
 function VerifyEmailForm() {
   const location = useLocation();
@@ -141,8 +141,8 @@ function VerifyEmailForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4 py-8">
-      <div className="w-full max-w-[430px] rounded-2xl bg-white px-5 py-8 shadow-xl sm:px-7">
+    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4 py-8">
+      <div className="w-full max-w-[430px] border border-neutral-200 bg-white px-5 py-8 sm:px-7">
 
         {/* Icône de vérification */}
         <div className="mb-5 flex justify-center">
@@ -266,7 +266,10 @@ function VerifyEmailForm() {
         {success && (
           <button
             type="button"
-            onClick={() => navigate("/login", { replace: true })}
+            onClick={() => {
+              const next = storedReturnPath();
+              navigate(next ? `/login?reason=order&next=${encodeURIComponent(next)}` : "/login", { replace: true });
+            }}
             className="mt-5 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-emerald-700 text-xs font-semibold text-white shadow-md transition hover:bg-emerald-800"
           >
             Se connecter

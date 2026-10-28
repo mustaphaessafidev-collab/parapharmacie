@@ -201,6 +201,7 @@ const mapProduct = (product) => ({
   imageUrl: product.imageUrl,
   stockQuantity: product.stockQuantity,
   isActive: product.isActive,
+  isFeatured: Boolean(product.isFeatured),
   status: product.isActive ? "active" : "blocked",
   createdAt: product.createdAt,
   orderCount: product._count?.orderItems ?? 0,
@@ -422,18 +423,60 @@ const deleteProduct = async (id) => {
 
 const listPublicProducts = async (query) => {
   const where = { isActive: true };
+  const search = String(query.search || "").trim().slice(0, 100);
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
   if (query.categoryId) {
     assertId(query.categoryId, "Catégorie");
     where.categoryId = query.categoryId;
   }
+  if (query.featured === "true" || query.featured === "1") {
+    where.isFeatured = true;
+  }
+  if (query.availability === "in") where.stockQuantity = { gt: 0 };
+  if (query.availability === "out") where.stockQuantity = { lte: 0 };
 
+  const direction = query.order === "desc" ? "desc" : "asc";
+  const orderBy =
+    query.sort === "price"
+      ? { price: direction }
+      : query.sort === "created"
+        ? { createdAt: direction }
+        : query.sort === "popular"
+          ? { orderItems: { _count: direction } }
+          : { name: direction };
+
+  if (query.page == null || query.page === "") {
+    const rows = await prisma.product.findMany({
+      where,
+      include: productInclude,
+      orderBy,
+    });
+    return { products: rows.map(mapProduct) };
+  }
+
+  const requestedSize = Number.parseInt(query.pageSize, 10);
+  const pageSize = [8, 12, 24].includes(requestedSize) ? requestedSize : 12;
+  const requestedPage = parsePage(query.page);
+  const total = await prisma.product.count({ where });
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(requestedPage, pages);
   const rows = await prisma.product.findMany({
     where,
     include: productInclude,
-    orderBy: { name: "asc" },
+    orderBy,
+    skip: (page - 1) * pageSize,
+    take: pageSize,
   });
 
-  return { products: rows.map(mapProduct) };
+  return {
+    products: rows.map(mapProduct),
+    pagination: { page, pageSize, total, pages },
+  };
 };
 
 const getPublicProduct = async (id) => {

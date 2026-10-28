@@ -1,10 +1,16 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { register } from "../../services/authService";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { register, rememberReturn, safeReturnPath } from "../../services/authService";
 
 function RegisterForm() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const next = safeReturnPath(params.get("next"));
+
+  useEffect(() => {
+    if (next) rememberReturn(next);
+  }, [next]);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -158,28 +164,14 @@ function RegisterForm() {
         : "Bon";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-indigo-50 px-3 py-4 text-slate-800">
-      <div className="mx-auto w-full max-w-[520px] overflow-hidden rounded-xl bg-white shadow-lg">
-
-        {/* Top security bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 bg-white px-5 py-3 text-[10px]">
-          <span className="font-medium tracking-wide text-emerald-700">
-            ● PARAPHARMACIE OFFICIELLE • CERTIFIÉE CNDP
-          </span>
-
-          <span className="text-gray-600">
-            🛡 Données Protégées (Loi 09–08)
-          </span>
-        </div>
+    <div className="min-h-screen bg-neutral-50 px-3 py-8 text-neutral-900">
+      <div className="mx-auto w-full max-w-[520px] overflow-hidden border border-neutral-200 bg-white">
 
         <div className="px-5 py-5 sm:px-7">
-
-          {/* Welcome badge */}
-          <div className="mb-2 flex justify-center">
-            <span className="rounded-full bg-emerald-300 px-4 py-1 text-xs font-semibold text-emerald-900">
-              ♧ Bienvenue chez AtlasPara
-            </span>
-          </div>
+          <Link to="/" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-neutral-950">
+            <span className="flex h-8 w-8 items-center justify-center bg-[#0e7a45] text-white">+</span>
+            AtlasPara
+          </Link>
 
           {/* Header */}
           <div className="text-center">
@@ -191,27 +183,11 @@ function RegisterForm() {
               Créez votre compte pour accéder à nos produits dermo-
               cosmétiques et à nos conseils personnalisés.
             </p>
-          </div>
-
-          {/* Welcome offer */}
-          <div className="mt-7 flex items-center gap-3 rounded-xl bg-indigo-50 px-4 py-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100">
-              🎁
-            </div>
-
-            <div className="text-[11px]">
-              <div className="font-semibold text-slate-700">
-                Avantage Bienvenue
-                <span className="ml-2 rounded-sm bg-orange-400 px-1.5 py-0.5 text-[9px] text-white">
-                  -10% IMMÉDIAT
-                </span>
-              </div>
-
-              <p className="mt-0.5 text-gray-500">
-                Profitez de votre offre de bienvenue selon les
-                conditions de la parapharmacie.
+            {next && (
+              <p className="mx-auto mt-3 max-w-[400px] rounded-xl bg-emerald-50 px-3 py-2 text-sm leading-5 text-emerald-900">
+                Après vérification de votre e-mail, connectez-vous pour reprendre votre commande.
               </p>
-            </div>
+            )}
           </div>
 
           {/* Error message */}
@@ -251,9 +227,7 @@ function RegisterForm() {
                 <span className="text-emerald-600">Requis</span>
               </div>
 
-              <div className="flex h-10 items-center rounded-lg bg-indigo-50 px-3">
-                <span className="mr-2 text-gray-500">♙</span>
-
+              <div className="flex h-10 items-center border border-neutral-300 px-3 focus-within:border-neutral-950">
                 <input
                   id="fullName"
                   type="text"
@@ -279,7 +253,7 @@ function RegisterForm() {
                 Adresse e-mail
               </label>
 
-              <div className="flex h-10 items-center rounded-lg bg-indigo-50 px-3">
+              <div className="flex h-10 items-center border border-neutral-300 px-3 focus-within:border-neutral-950">
                 <span className="mr-2 font-semibold text-gray-500">@</span>
 
                 <input
@@ -352,7 +326,7 @@ function RegisterForm() {
                 Mot de passe
               </label>
 
-              <div className="flex h-10 items-center rounded-lg bg-indigo-50 px-3">
+              <div className="flex h-10 items-center border border-neutral-300 px-3 focus-within:border-neutral-950">
                 <span className="mr-2 text-gray-500">🔒</span>
 
                 <input
@@ -380,7 +354,7 @@ function RegisterForm() {
                   }
                   className="ml-2 text-sm text-gray-500"
                 >
-                  {showPassword ? "🙈" : "👁"}
+                  {showPassword ? "Masquer" : "Afficher"}
                 </button>
               </div>
 
@@ -445,7 +419,7 @@ function RegisterForm() {
                 Confirmer le mot de passe
               </label>
 
-              <div className="flex h-10 items-center rounded-lg bg-indigo-50 px-3">
+              <div className="flex h-10 items-center border border-neutral-300 px-3 focus-within:border-neutral-950">
                 <span className="mr-2 text-gray-500">🔄</span>
 
                 <input
@@ -474,7 +448,7 @@ function RegisterForm() {
                   }
                   className="ml-2 text-sm text-gray-500"
                 >
-                  {showConfirmPassword ? "🙈" : "👁"}
+                  {showConfirmPassword ? "Masquer" : "Afficher"}
                 </button>
               </div>
 
@@ -544,7 +518,7 @@ function RegisterForm() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 text-xs font-semibold text-white shadow-md transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-1 flex h-11 w-full items-center justify-center gap-2 bg-[#0e7a45] text-sm font-semibold text-white transition hover:bg-[#0c693b] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <>
@@ -552,26 +526,26 @@ function RegisterForm() {
                   Création du compte...
                 </>
               ) : (
-                <>♙ Créer mon compte</>
+                <>Créer mon compte</>
               )}
             </button>
 
-            <p className="text-center text-[9px] text-gray-500">
-              🛡 Vos informations sont transmises de manière sécurisée.
+            <p className="text-center text-xs text-neutral-500">
+              Vos informations servent uniquement à créer le compte et à livrer les commandes.
             </p>
           </form>
         </div>
 
         {/* Bottom login */}
-        <div className="bg-indigo-50 px-5 py-4 text-center text-xs text-gray-500">
+        <div className="border-t border-neutral-200 px-5 py-4 text-center text-xs text-neutral-600">
           Vous avez déjà un compte ?
 
-          <a
-            href="/login"
+          <Link
+            to={next ? `/login?reason=order&next=${encodeURIComponent(next)}` : "/login"}
             className="ml-1 font-semibold text-emerald-700 hover:text-emerald-800"
           >
             Se connecter →
-          </a>
+          </Link>
         </div>
       </div>
     </div>

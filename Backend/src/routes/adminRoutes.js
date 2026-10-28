@@ -34,6 +34,19 @@ const {
   updateProfile,
   changePassword,
 } = require("../controllers/adminProfileController");
+const {
+  listOrders,
+  getOrder,
+  listAssignees,
+  validateOrder,
+  rejectOrder,
+  assignOrder,
+  cancelOrder,
+} = require("../controllers/adminOrderController");
+const {
+  listAdminNotifications,
+  markNotificationRead,
+} = require("../controllers/notificationController");
 const { requireAdmin } = require("../middlewares/requireAdmin");
 const { productImage } = require("../middlewares/uploadProductImage");
 
@@ -45,6 +58,15 @@ router.get("/profile", getProfile);
 router.patch("/profile", updateProfile);
 router.patch("/profile/password", changePassword);
 router.get("/dashboard", dashboard);
+router.get("/notifications", listAdminNotifications);
+router.patch("/notifications/:id/read", markNotificationRead);
+router.get("/orders/assignees", listAssignees);
+router.get("/orders", listOrders);
+router.get("/orders/:id", getOrder);
+router.post("/orders/:id/validate", validateOrder);
+router.post("/orders/:id/reject", rejectOrder);
+router.post("/orders/:id/assign", assignOrder);
+router.post("/orders/:id/cancel", cancelOrder);
 router.get("/clients", listClients);
 router.get("/clients/:id", getClient);
 router.patch("/clients/:id", updateClient);

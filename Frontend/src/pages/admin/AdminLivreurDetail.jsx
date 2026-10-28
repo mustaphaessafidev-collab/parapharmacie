@@ -336,7 +336,13 @@ function AdminLivreurDetail() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="font-medium text-slate-800" title={delivery.order?.id || delivery.id}>
-                        #{(delivery.order?.id || delivery.id).slice(0, 8).toUpperCase()}
+                        {delivery.order?.id ? (
+                          <Link to={`/admin/commandes/${delivery.order.id}`} className="text-[#1f9d55]">
+                            #{delivery.order.id.slice(0, 8).toUpperCase()}
+                          </Link>
+                        ) : (
+                          `#${delivery.id.slice(0, 8).toUpperCase()}`
+                        )}
                       </p>
                       <p className="mt-1 text-xs text-slate-400">
                         {delivery.order?.orderDate

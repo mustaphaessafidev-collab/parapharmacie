@@ -125,3 +125,19 @@ export const updateProductStatus = (id, isActive) =>
   adminRequest(`/products/${id}/status`, { method: "PATCH", body: { isActive } });
 export const deleteProduct = (id) =>
   adminRequest(`/products/${id}`, { method: "DELETE" });
+
+export const fetchNotifications = () => adminRequest("/notifications");
+export const markNotificationRead = (id) =>
+  adminRequest(`/notifications/${id}/read`, { method: "PATCH", body: {} });
+
+export const fetchOrders = (filters) => withQuery("/orders", filters);
+export const fetchOrder = (id) => adminRequest(`/orders/${id}`);
+export const fetchAssignees = () => adminRequest("/orders/assignees");
+export const validateOrder = (id) =>
+  adminRequest(`/orders/${id}/validate`, { method: "POST", body: {} });
+export const rejectOrder = (id, reason) =>
+  adminRequest(`/orders/${id}/reject`, { method: "POST", body: { reason } });
+export const assignOrder = (id, livreurId) =>
+  adminRequest(`/orders/${id}/assign`, { method: "POST", body: { livreurId } });
+export const cancelAdminOrder = (id, reason) =>
+  adminRequest(`/orders/${id}/cancel`, { method: "POST", body: { reason } });

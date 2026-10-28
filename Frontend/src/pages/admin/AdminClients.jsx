@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
+import UserAvatar from "../../components/UserAvatar";
 import { fetchClients } from "../../services/adminService";
 import { clearSession, getSession } from "../../services/authService";
 
@@ -345,12 +346,15 @@ function AdminClients() {
                       )}
                     </td>
                     <td className="px-3 py-3">
-                      <Link to={`/admin/clients/${client.id}`} className="font-medium text-slate-800">
-                        {fullName(client)}
+                      <Link to={`/admin/clients/${client.id}`} className="flex items-center gap-3">
+                        <UserAvatar user={client} className="h-9 w-9 text-xs" />
+                        <span>
+                          <span className="block font-medium text-slate-800">{fullName(client)}</span>
+                          <span className="mt-0.5 block text-[11px] font-normal text-slate-400">
+                            {client.emailVerified ? "E-mail vérifié" : "E-mail non vérifié"}
+                          </span>
+                        </span>
                       </Link>
-                      <span className="mt-0.5 block text-[11px] text-slate-400">
-                        {client.emailVerified ? "E-mail vérifié" : "E-mail non vérifié"}
-                      </span>
                     </td>
                     <td className="px-3 py-3 text-slate-600">{client.email}</td>
                     <td className="px-3 py-3 text-slate-500">{client.phone || "—"}</td>

@@ -13,18 +13,34 @@ import AdminCategoryForm from "./pages/admin/AdminCategoryForm";
 import AdminCategoryDetail from "./pages/admin/AdminCategoryDetail";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminProductForm from "./pages/admin/AdminProductForm";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import AdminProfile from "./pages/admin/AdminProfile";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import VerifyEmail from "./pages/auth/VerifyEmail";
-import ClientSpace from "./pages/client/ClientSpace";
-import LivreurSpace from "./pages/livreur/LivreurSpace";
+import ClientLayout from "./components/client/ClientLayout";
+import ClientShop from "./pages/client/ClientShop";
+import ClientProducts from "./pages/client/ClientProducts";
+import ClientProduct from "./pages/client/ClientProduct";
+import ClientCart from "./pages/client/ClientCart";
+import ClientCheckout from "./pages/client/ClientCheckout";
+import ClientOrders from "./pages/client/ClientOrders";
+import ClientOrderDetail from "./pages/client/ClientOrderDetail";
+import ClientProfile from "./pages/client/ClientProfile";
+import LivreurOrders from "./pages/livreur/LivreurOrders";
+import LivreurOrderDetail from "./pages/livreur/LivreurOrderDetail";
+import LivreurProfile from "./pages/livreur/LivreurProfile";
+import PublicCatalog from "./pages/store/PublicCatalog";
+import PublicProduct from "./pages/store/PublicProduct";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/produits" element={<PublicCatalog />} />
+        <Route path="/produits/:id" element={<PublicProduct />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
@@ -133,18 +149,59 @@ function App() {
           }
         />
         <Route
-          path="/client"
+          path="/admin/commandes"
           element={
-            <ProtectedRoute role="CLIENT">
-              <ClientSpace />
+            <ProtectedRoute role="ADMIN">
+              <AdminOrders />
             </ProtectedRoute>
           }
         />
         <Route
+          path="/admin/commandes/:id"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminOrderDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/client"
+          element={
+            <ProtectedRoute role="CLIENT">
+              <ClientLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<ClientShop />} />
+          <Route path="produits" element={<ClientProducts />} />
+          <Route path="produits/:id" element={<ClientProduct />} />
+          <Route path="panier" element={<ClientCart />} />
+          <Route path="commander" element={<ClientCheckout />} />
+          <Route path="commandes" element={<ClientOrders />} />
+          <Route path="commandes/:id" element={<ClientOrderDetail />} />
+          <Route path="profil" element={<ClientProfile />} />
+        </Route>
+        <Route
           path="/livreur"
           element={
             <ProtectedRoute role="LIVREUR">
-              <LivreurSpace />
+              <LivreurOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/livreur/livraisons/:id"
+          element={
+            <ProtectedRoute role="LIVREUR">
+              <LivreurOrderDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/livreur/profil"
+          element={
+            <ProtectedRoute role="LIVREUR">
+              <LivreurProfile />
             </ProtectedRoute>
           }
         />

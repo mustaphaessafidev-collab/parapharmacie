@@ -1,12 +1,18 @@
 const prisma = require("../config/prisma");
+const { STATUS_LABELS } = require("./orderWorkflow");
+const { isStoredAvatar } = require("./avatarStorage");
 
 const LOW_STOCK_MAX = 5;
-const PENDING_STATUSES = new Set([
+const IN_PROGRESS_STATUSES = new Set([
   "en_attente",
   "preparation",
   "en_preparation",
   "en_cours",
   "pending",
+  "confirmed",
+  "assigned",
+  "out_for_delivery",
+  "preparing",
 ]);
 
 const periodRange = (period, now = new Date()) => {
@@ -169,7 +175,7 @@ const getDashboard = async (period) => {
       },
       orderBy: { createdAt: "desc" },
       include: {
-        user: { select: { firstName: true, lastName: true } },
+        user: { select: { firstName: true, lastName: true, avatarUrl: true } },
         items: { select: { quantity: true } },
         payments: {
           select: { method: true, status: true },
@@ -180,7 +186,7 @@ const getDashboard = async (period) => {
   ]);
 
   const pendingOrders = periodOrders.filter((order) =>
-    PENDING_STATUSES.has(String(order.status || "").trim().toLowerCase())
+    IN_PROGRESS_STATUSES.has(String(order.status || "").trim().toLowerCase())
   ).length;
 
   const revenue = periodOrders.reduce(
@@ -213,7 +219,9 @@ const getDashboard = async (period) => {
       date: order.orderDate,
       amount: money(order.totalAmount),
       status: order.status,
+      statusLabel: STATUS_LABELS[order.status] || order.status,
       client: `${order.user.firstName} ${order.user.lastName}`.trim(),
+      clientAvatarUrl: isStoredAvatar(order.user.avatarUrl) ? order.user.avatarUrl : null,
       articles: order.items.reduce((sum, item) => sum + item.quantity, 0),
       paymentMethod: order.payments[0]?.method || null,
       paymentStatus: order.payments[0]?.status || null,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
+import UserAvatar from "../../components/UserAvatar";
 import {
   deleteClient,
   fetchClient,
@@ -190,7 +191,9 @@ function AdminClientDetail() {
       {!loading && client && (
         <>
           <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-            <div>
+            <div className="flex items-start gap-4">
+              <UserAvatar user={client} className="h-16 w-16 text-xl" />
+              <div>
               <h1 className="text-2xl font-semibold text-slate-900">{fullName(client)}</h1>
               <p className="mt-1 text-sm text-slate-400">{client.email}</p>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -211,6 +214,7 @@ function AdminClientDetail() {
                     Nouveau
                   </span>
                 )}
+              </div>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">

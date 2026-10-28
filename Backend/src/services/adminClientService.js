@@ -1,5 +1,6 @@
 const { Prisma } = require("@prisma/client");
 const prisma = require("../config/prisma");
+const { isStoredAvatar } = require("./avatarStorage");
 
 const PAGE_SIZES = new Set([10, 20, 50]);
 const SORTS = {
@@ -30,6 +31,7 @@ const publicUserSelect = {
   isActive: true,
   emailVerified: true,
   createdAt: true,
+  avatarUrl: true,
 };
 
 const recentSince = () => {
@@ -191,6 +193,7 @@ const listClients = async (query) => {
       u.last_name AS "lastName",
       u.email,
       u.phone,
+      u.avatar_url AS "avatarUrl",
       u.is_active AS "isActive",
       u.email_verified AS "emailVerified",
       u.created_at AS "createdAt",
@@ -229,6 +232,7 @@ const listClients = async (query) => {
       lastName: row.lastName,
       email: row.email,
       phone: row.phone,
+      avatarUrl: isStoredAvatar(row.avatarUrl) ? row.avatarUrl : null,
       isActive: row.isActive,
       emailVerified: row.emailVerified,
       createdAt: row.createdAt,
@@ -277,6 +281,7 @@ const getClient = async (id) => {
       email: client.email,
       phone: client.phone,
       address: client.address,
+      avatarUrl: isStoredAvatar(client.avatarUrl) ? client.avatarUrl : null,
       isActive: client.isActive,
       emailVerified: client.emailVerified,
       createdAt: client.createdAt,

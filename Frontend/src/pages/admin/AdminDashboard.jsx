@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
+import UserAvatar from "../../components/UserAvatar";
 import { fetchDashboard } from "../../services/adminService";
 import { clearSession, getSession } from "../../services/authService";
 
@@ -25,14 +26,18 @@ const longDate = new Intl.DateTimeFormat("fr-FR", {
 const palette = ["#1f9d55", "#3b82f6", "#f59e0b", "#8b5cf6", "#ef4444", "#14b8a6"];
 
 function statusClass(status) {
-  const value = String(status || "").toLowerCase();
+  const value = String(status || "").toUpperCase();
+  if (value === "DELIVERED" || value === "CONFIRMED") return "bg-emerald-50 text-emerald-700";
+  if (value === "CANCELLED" || value === "REJECTED" || value === "DELIVERY_FAILED") return "bg-rose-50 text-rose-700";
+  if (value === "PENDING") return "bg-amber-50 text-amber-700";
+  if (value === "ASSIGNED" || value === "OUT_FOR_DELIVERY") return "bg-indigo-50 text-indigo-700";
 
-  if (value.includes("livr")) return "bg-emerald-50 text-emerald-700";
-  if (value.includes("annul")) return "bg-rose-50 text-rose-700";
-  if (value.includes("attente") || value.includes("prepar") || value.includes("cours")) {
+  const legacy = String(status || "").toLowerCase();
+  if (legacy.includes("livr")) return "bg-emerald-50 text-emerald-700";
+  if (legacy.includes("annul")) return "bg-rose-50 text-rose-700";
+  if (legacy.includes("attente") || legacy.includes("prepar") || legacy.includes("cours")) {
     return "bg-amber-50 text-amber-700";
   }
-
   return "bg-slate-100 text-slate-600";
 }
 
@@ -190,6 +195,14 @@ function AdminDashboard() {
     };
   }, [period]);
 
+  useEffect(() => {
+    const refresh = () => {
+      fetchDashboard(period).then(setData).catch(() => {});
+    };
+    window.addEventListener("atlaspara-orders", refresh);
+    return () => window.removeEventListener("atlaspara-orders", refresh);
+  }, [period]);
+
   const handleLogout = () => {
     clearSession();
     navigate("/login");
@@ -202,7 +215,8 @@ function AdminDashboard() {
     return (
       order.client.toLowerCase().includes(query) ||
       order.id.toLowerCase().includes(query) ||
-      String(order.status).toLowerCase().includes(query)
+      String(order.status).toLowerCase().includes(query) ||
+      String(order.statusLabel || "").toLowerCase().includes(query)
     );
   });
 
@@ -218,6 +232,7 @@ function AdminDashboard() {
         products: totals?.products || 0,
         clients: totals?.clients || 0,
         lowStock: totals?.lowStock || 0,
+        orders: totals?.pendingOrders || 0,
       }}
     >
       <div className="mb-5">
@@ -311,17 +326,27 @@ function AdminDashboard() {
                 {orders.map((order) => (
                   <tr key={order.id} className="border-t border-slate-100">
                     <td className="px-5 py-3 font-medium text-slate-800">
-                      #{order.id.slice(0, 8).toUpperCase()}
+                      <Link to={`/admin/commandes/${order.id}`} className="text-[#1f9d55]">
+                        #{order.id.slice(0, 8).toUpperCase()}
+                      </Link>
                       <span className="mt-0.5 block text-[11px] font-normal text-slate-400">
                         {order.articles} article{order.articles > 1 ? "s" : ""}
                       </span>
                     </td>
-                    <td className="px-3 py-3">{order.client}</td>
+                    <td className="px-3 py-3">
+                      <span className="flex items-center gap-2">
+                        <UserAvatar
+                          user={{ firstName: order.client, avatarUrl: order.clientAvatarUrl }}
+                          className="h-8 w-8 text-xs"
+                        />
+                        {order.client}
+                      </span>
+                    </td>
                     <td className="px-3 py-3 text-slate-500">{dateFormat.format(new Date(order.date))}</td>
                     <td className="px-3 py-3">{money(order.amount)}</td>
                     <td className="px-5 py-3">
                       <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(order.status)}`}>
-                        {order.status}
+                        {order.statusLabel || order.status}
                       </span>
                     </td>
                   </tr>

@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import OrderAlertCenter from "../OrderAlertCenter";
+import SoundToggle from "../SoundToggle";
+import { fetchNotifications, markNotificationRead } from "../../services/adminService";
+import { SOUNDS } from "../../services/sounds";
 
 const periods = [
   { id: "today", label: "Aujourd'hui" },
@@ -80,11 +84,12 @@ function AdminLayout({
   children,
 }) {
   const [open, setOpen] = useState(false);
+  const [pendingBadge, setPendingBadge] = useState(null);
   const fullName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Admin";
 
   const items = [
     { label: "Tableau de bord", icon: "board", to: "/admin", end: true },
-    { label: "Commandes", icon: "chart" },
+    { label: "Commandes", icon: "chart", to: "/admin/commandes", badge: pendingBadge ?? badges.orders },
     { label: "Produits", icon: "box", to: "/admin/products", badge: badges.products },
     { label: "Catégories", icon: "tag", to: "/admin/categories", badge: badges.categories },
     { label: "Stocks", icon: "alert", badge: badges.lowStock },
@@ -195,22 +200,32 @@ function AdminLayout({
                 ))}
               </div>
             )}
-            <Link
-              to="/admin/profile"
-              className={`flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 ${
-                typeof onSearch === "function" ? "" : "ml-auto"
-              }`}
-            >
+            <div className={`flex items-center gap-2 ${typeof onSearch === "function" ? "" : "ml-auto"}`}>
+              <SoundToggle />
+              <Link
+                to="/admin/profile"
+                className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1"
+              >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-xs font-semibold text-[#1f9d55]">
                 {fullName.slice(0, 1)}
               </span>
               <span className="hidden max-w-[140px] truncate text-sm font-medium text-slate-700 sm:block">
                 {fullName}
               </span>
-            </Link>
+              </Link>
+            </div>
           </div>
         </header>
         <main className="px-4 py-5 sm:px-6">{children}</main>
+        <OrderAlertCenter
+          userId={user?.id}
+          sound={SOUNDS.newOrder}
+          load={fetchNotifications}
+          markRead={markNotificationRead}
+          hrefFor={(item) => `/admin/commandes/${item.orderId}`}
+          onBadge={setPendingBadge}
+          onArrive={() => window.dispatchEvent(new CustomEvent("atlaspara-orders"))}
+        />
       </div>
     </div>
   );
